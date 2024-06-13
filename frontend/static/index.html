@@ -17,7 +17,7 @@
       <button type="button" class="btn btn-sm btn-success el-square" v-show="serverRole == 'master'" v-on:click.stop="u.modalNewUserVisible=true">Add user</button>
       <b-badget class="btn btn-sm btn-info el-square" v-if="serverRole == 'slave'">Slave - last sync: {{ lastSync }}</b-badget>
       <button type="button" class="btn btn-sm btn-secondary el-square" v-on:click.stop="filters.hideRevoked=!filters.hideRevoked;this.$cookies.set('hideRevoked',!(this.$cookies.get('hideRevoked') == 'true'), -1);">{{ revokeFilterText }}</button>
-      <button type="button" class="btn btn-sm btn-success el-square" v-on:click="logout()">Login Out</button>
+      <button type="button" class="btn btn-sm btn-success el-square" v-on:click.stop="logout">Login Out</button>
     </div>
     <div slot="emptystate" class="d-flex justify-content-center">
       <h4>No users have been created yet.</h4>

@@ -346,7 +346,7 @@ new Vue({
   },
   methods: {
     logout: function(){
-      var _this = this;
+      console.log("logout")
       // 发送登出请求到后端
       axios.post('/logout')
         .then(response => {
