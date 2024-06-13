@@ -1,4 +1,12 @@
+
+```
+go get github.com/alecthomas/kingpin
+go get -u github.com/gobuffalo/packr/v2/packr2
+
+```
+
 # ovpn-admin
+
 
 Simple web UI to manage OpenVPN users, their certificates & routes in Linux. While backend is written in Go, frontend is based on Vue.js.
 

@@ -345,6 +345,19 @@ new Vue({
 
   },
   methods: {
+    logout: function(){
+      var _this = this;
+      // 发送登出请求到后端
+      axios.post('/logout')
+        .then(response => {
+          // 登出成功，重定向到登录页面
+          window.location.href = '/login';
+        })
+        .catch(error => {
+          console.error('Logout failed:', error);
+          alert('Logout failed');
+        });
+    },
     rowStyleClassFn: function(row) {
       if (row.ConnectionStatus == 'Connected') {
         return 'connected-user'

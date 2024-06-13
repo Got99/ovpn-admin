@@ -9,6 +9,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/alecthomas/kingpin"
+	"github.com/gobuffalo/packr/v2"
 	"github.com/google/uuid"
 	"io/ioutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,12 +27,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/gobuffalo/packr/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
@@ -483,6 +482,18 @@ func (oAdmin *OvpnAdmin) downloadCcdHandler(w http.ResponseWriter, r *http.Reque
 	w.Header().Set("Content-Disposition", "attachment; filename="+ccdArchiveFileName)
 	http.ServeFile(w, r, ccdArchivePath)
 }
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("auth_token")
+		if err != nil || cookie.Value != "your_hardcoded_token" {
+			// 如果没有有效的cookie，重定向到登录页面
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+		// 如果验证通过，继续处理请求
+		next.ServeHTTP(w, r)
+	})
+}
 
 var app OpenVPNPKI
 
@@ -557,28 +568,68 @@ func main() {
 	staticBox := packr.New("static", "./frontend/static")
 	static := CacheControlWrapper(http.FileServer(staticBox))
 
-	http.Handle(*listenBaseUrl, http.StripPrefix(strings.TrimRight(*listenBaseUrl, "/"), static))
-	http.HandleFunc(*listenBaseUrl + "api/server/settings", ovpnAdmin.serverSettingsHandler)
-	http.HandleFunc(*listenBaseUrl + "api/users/list", ovpnAdmin.userListHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/create", ovpnAdmin.userCreateHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/change-password", ovpnAdmin.userChangePasswordHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/rotate", ovpnAdmin.userRotateHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/delete", ovpnAdmin.userDeleteHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/revoke", ovpnAdmin.userRevokeHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/unrevoke", ovpnAdmin.userUnrevokeHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/config/show", ovpnAdmin.userShowConfigHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/disconnect", ovpnAdmin.userDisconnectHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/statistic", ovpnAdmin.userStatisticHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/ccd", ovpnAdmin.userShowCcdHandler)
-	http.HandleFunc(*listenBaseUrl + "api/user/ccd/apply", ovpnAdmin.userApplyCcdHandler)
+	//http.Handle(*listenBaseUrl, http.StripPrefix(strings.TrimRight(*listenBaseUrl, "/"), static))
+	staticHandler := http.StripPrefix(strings.TrimRight(*listenBaseUrl, "/"), static)
+	protectedStaticHandler := authMiddleware(staticHandler)
+	http.Handle(*listenBaseUrl, protectedStaticHandler)
 
-	http.HandleFunc(*listenBaseUrl + "api/sync/last/try", ovpnAdmin.lastSyncTimeHandler)
-	http.HandleFunc(*listenBaseUrl + "api/sync/last/successful", ovpnAdmin.lastSuccessfulSyncTimeHandler)
-	http.HandleFunc(*listenBaseUrl + downloadCertsApiUrl, ovpnAdmin.downloadCertsHandler)
-	http.HandleFunc(*listenBaseUrl + downloadCcdApiUrl, ovpnAdmin.downloadCcdHandler)
+	http.HandleFunc(*listenBaseUrl+"login", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			loginPage, err := staticBox.FindString("login.html")
+			if err != nil {
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
+			}
+			fmt.Fprint(w, loginPage)
+		} else if r.Method == "POST" {
+			username := r.FormValue("username")
+			password := r.FormValue("password")
+			if username == "admin" && password == "password" {
+				http.SetCookie(w, &http.Cookie{
+					Name:   "auth_token",
+					Value:  "your_hardcoded_token",
+					Path:   "/",
+					MaxAge: 480,
+				})
+				http.Redirect(w, r, "/", http.StatusSeeOther)
+			} else {
+				http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+			}
+		}
+	})
+	http.HandleFunc(*listenBaseUrl+"logout", func(w http.ResponseWriter, r *http.Request) {
+		// 清除cookie或session
+		http.SetCookie(w, &http.Cookie{
+			Name:    "auth_token",
+			Value:   "",
+			Path:    "/",
+			Expires: time.Unix(0, 0), // 设置cookie过期
+		})
+		// 可以选择发送一个响应表示登出成功
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "Logged out successfully")
+	})
+	http.HandleFunc(*listenBaseUrl+"api/server/settings", ovpnAdmin.serverSettingsHandler)
+	http.HandleFunc(*listenBaseUrl+"api/users/list", ovpnAdmin.userListHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/create", ovpnAdmin.userCreateHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/change-password", ovpnAdmin.userChangePasswordHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/rotate", ovpnAdmin.userRotateHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/delete", ovpnAdmin.userDeleteHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/revoke", ovpnAdmin.userRevokeHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/unrevoke", ovpnAdmin.userUnrevokeHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/config/show", ovpnAdmin.userShowConfigHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/disconnect", ovpnAdmin.userDisconnectHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/statistic", ovpnAdmin.userStatisticHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/ccd", ovpnAdmin.userShowCcdHandler)
+	http.HandleFunc(*listenBaseUrl+"api/user/ccd/apply", ovpnAdmin.userApplyCcdHandler)
+
+	http.HandleFunc(*listenBaseUrl+"api/sync/last/try", ovpnAdmin.lastSyncTimeHandler)
+	http.HandleFunc(*listenBaseUrl+"api/sync/last/successful", ovpnAdmin.lastSuccessfulSyncTimeHandler)
+	http.HandleFunc(*listenBaseUrl+downloadCertsApiUrl, ovpnAdmin.downloadCertsHandler)
+	http.HandleFunc(*listenBaseUrl+downloadCcdApiUrl, ovpnAdmin.downloadCcdHandler)
 
 	http.Handle(*metricsPath, promhttp.HandlerFor(ovpnAdmin.promRegistry, promhttp.HandlerOpts{}))
-	http.HandleFunc(*listenBaseUrl + "ping", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc(*listenBaseUrl+"ping", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "pong")
 	})
 

@@ -1,3 +1,6 @@
+.DS_Store
+frontend/static/dist/
+
 easyrsa
 easyrsa_master
 easyrsa_slave
@@ -19,3 +22,4 @@ packrd/
 *.ntvs*
 *.njsproj
 *.sln
+
