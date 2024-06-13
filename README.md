@@ -5,6 +5,11 @@ go get -u github.com/gobuffalo/packr/v2/packr2
 
 ```
 
+```
+docker build  -t hub.goting.top:5443/private/openvpn:0.0.3 -f ./Dockerfile.openvpn . --no-cache
+docker build -t hub.goting.top:5443/private/ovpn-admin:0.0.3 . --no-cache
+```
+
 # ovpn-admin
 
 
