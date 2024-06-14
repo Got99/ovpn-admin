@@ -485,7 +485,7 @@ func (oAdmin *OvpnAdmin) downloadCcdHandler(w http.ResponseWriter, r *http.Reque
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("auth_token")
-		if err != nil || cookie.Value != "your_hardcoded_token" {
+		if err != nil || cookie.Value != "d196fcd6-0739-4f39-af45-c4ae5e3f0979" {
 			// 如果没有有效的cookie，重定向到登录页面
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
@@ -574,6 +574,15 @@ func main() {
 	http.Handle(*listenBaseUrl, protectedStaticHandler)
 
 	http.HandleFunc(*listenBaseUrl+"login", func(w http.ResponseWriter, r *http.Request) {
+		usernameEnv := os.Getenv("USERNAME")
+		if usernameEnv == "" {
+			usernameEnv = "admin" // 默认用户名
+		}
+
+		passwordEnv := os.Getenv("PASSWORD")
+		if passwordEnv == "" {
+			passwordEnv = "admin" // 默认密码
+		}
 		if r.Method == "GET" {
 			loginPage, err := staticBox.FindString("login.html")
 			if err != nil {
@@ -584,10 +593,10 @@ func main() {
 		} else if r.Method == "POST" {
 			username := r.FormValue("username")
 			password := r.FormValue("password")
-			if username == "admin" && password == "password" {
+			if username == usernameEnv && password == passwordEnv {
 				http.SetCookie(w, &http.Cookie{
 					Name:   "auth_token",
-					Value:  "your_hardcoded_token",
+					Value:  "d196fcd6-0739-4f39-af45-c4ae5e3f0979",
 					Path:   "/",
 					MaxAge: 480,
 				})
