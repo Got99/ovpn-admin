@@ -1,8 +1,10 @@
 FROM  hub.goting.top:5443/library/node:16-alpine3.15 AS frontend-builder
 COPY frontend/ /app
-RUN apk add --update python3 make g++ && cd /app && npm install && npm run build
+RUN apk add --update python3 make g++
+RUN cd /app && npm install && npm run build
 
 FROM  hub.goting.top:5443/library/golang:1.17.3-buster AS backend-builder
+ENV GOPROXY=https://goproxy.io,direct
 RUN go install github.com/gobuffalo/packr/v2/packr2@latest
 COPY --from=frontend-builder /app/static /app/frontend/static
 COPY . /app

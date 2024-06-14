@@ -32,7 +32,7 @@ var axios_cfg = function(url, data='', type='form') {
       data: data,
       headers: { 'Content-Type': 'multipart/form-data' }
     };
-   } else if (type == 'json') {
+  } else if (type == 'json') {
     return {
       method: 'post',
       url: url,
@@ -226,19 +226,19 @@ new Vue({
       var data = new URLSearchParams();
       data.append('username', _this.username);
       axios.request(axios_cfg('api/user/revoke', data, 'form'))
-      .then(function(response) {
-        _this.getUserData();
-        _this.$notify({title: 'User ' + _this.username + ' revoked!', type: 'warn'})
-      });
+        .then(function(response) {
+          _this.getUserData();
+          _this.$notify({title: 'User ' + _this.username + ' revoked!', type: 'warn'})
+        });
     })
     _this.$root.$on('u-unrevoke', function () {
       var data = new URLSearchParams();
       data.append('username', _this.username);
       axios.request(axios_cfg('api/user/unrevoke', data, 'form'))
-      .then(function(response) {
-        _this.getUserData();
-        _this.$notify({title: 'User ' + _this.username + ' unrevoked!', type: 'success'})
-      });
+        .then(function(response) {
+          _this.getUserData();
+          _this.$notify({title: 'User ' + _this.username + ' unrevoked!', type: 'success'})
+        });
     })
     _this.$root.$on('u-rotate', function () {
       _this.u.modalRotateUserVisible = true;
@@ -255,40 +255,40 @@ new Vue({
       var data = new URLSearchParams();
       data.append('username', _this.username);
       axios.request(axios_cfg('api/user/config/show', data, 'form'))
-      .then(function(response) {
-        _this.u.openvpnConfig = response.data;
-      });
+        .then(function(response) {
+          _this.u.openvpnConfig = response.data;
+        });
     })
     _this.$root.$on('u-download-config', function () {
       var data = new URLSearchParams();
       data.append('username', _this.username);
       axios.request(axios_cfg('api/user/config/show', data, 'form'))
-      .then(function(response) {
-        const blob = new Blob([response.data], { type: 'text/plain' })
-        const link = document.createElement('a')
-        link.href = URL.createObjectURL(blob)
-        link.download = _this.username + ".ovpn"
-        link.click()
-        URL.revokeObjectURL(link.href)
-      }).catch(console.error);
+        .then(function(response) {
+          const blob = new Blob([response.data], { type: 'text/plain' })
+          const link = document.createElement('a')
+          link.href = URL.createObjectURL(blob)
+          link.download = _this.username + ".ovpn"
+          link.click()
+          URL.revokeObjectURL(link.href)
+        }).catch(console.error);
     })
     _this.$root.$on('u-edit-ccd', function () {
       _this.u.modalShowCcdVisible = true;
       var data = new URLSearchParams();
       data.append('username', _this.username);
       axios.request(axios_cfg('api/user/ccd', data, 'form'))
-      .then(function(response) {
-        _this.u.ccd = response.data;
-      });
+        .then(function(response) {
+          _this.u.ccd = response.data;
+        });
     })
     _this.$root.$on('u-disconnect-user', function () {
       _this.u.modalShowCcdVisible = true;
       var data = new URLSearchParams();
       data.append('username', _this.username);
       axios.request(axios_cfg('api/user/disconnect', data, 'form'))
-      .then(function(response) {
-        console.log(response.data);
-      });
+        .then(function(response) {
+          console.log(response.data);
+        });
     })
     _this.$root.$on('u-change-password', function () {
       _this.u.modalChangePasswordVisible = true;
@@ -301,7 +301,7 @@ new Vue({
       return this.u.ccd.ClientAddress == "dynamic"
     },
     ccdApplyStatusCssClass: function () {
-        return this.u.ccdApplyStatus == 200 ? "alert-success" : "alert-danger"
+      return this.u.ccdApplyStatus == 200 ? "alert-success" : "alert-danger"
     },
     passwordChangeStatusCssClass: function () {
       return this.u.passwordChangeStatus == 200 ? "alert-success" : "alert-danger"
@@ -345,18 +345,6 @@ new Vue({
 
   },
   methods: {
-    logout: function(){
-      // 发送登出请求到后端
-      axios.post('/logout')
-        .then(response => {
-          // 登出成功，重定向到登录页面
-          window.location.href = '/login';
-        })
-        .catch(error => {
-          console.error('Logout failed:', error);
-          alert('Logout failed');
-        });
-    },
     rowStyleClassFn: function(row) {
       if (row.ConnectionStatus == 'Connected') {
         return 'connected-user'
@@ -384,17 +372,17 @@ new Vue({
     getServerSetting: function() {
       var _this = this;
       axios.request(axios_cfg('api/server/settings'))
-      .then(function(response) {
-        _this.serverRole = response.data.serverRole;
-        _this.modulesEnabled = response.data.modules;
+        .then(function(response) {
+          _this.serverRole = response.data.serverRole;
+          _this.modulesEnabled = response.data.modules;
 
-        if (_this.serverRole == "slave") {
-          axios.request(axios_cfg('api/sync/last/successful'))
-          .then(function(response) {
-            _this.lastSync =  response.data;
-          });
-        }
-      });
+          if (_this.serverRole == "slave") {
+            axios.request(axios_cfg('api/sync/last/successful'))
+              .then(function(response) {
+                _this.lastSync =  response.data;
+              });
+          }
+        });
     },
 
     createUser: function() {
@@ -409,18 +397,18 @@ new Vue({
       _this.username = _this.u.newUserName;
 
       axios.request(axios_cfg('api/user/create', data, 'form'))
-      .then(function(response) {
-        _this.$notify({title: 'New user ' + _this.username + ' created', type: 'success'})
-        _this.u.modalNewUserVisible = false;
-        _this.u.newUserName = '';
-        _this.u.newUserPassword = '';
-        _this.getUserData();
-      })
-      .catch(function(error) {
-        _this.u.newUserCreateError = error.response.data;
-        _this.$notify({title: 'New user ' + _this.username + ' creation failed.', type: 'error'})
+        .then(function(response) {
+          _this.$notify({title: 'New user ' + _this.username + ' created', type: 'success'})
+          _this.u.modalNewUserVisible = false;
+          _this.u.newUserName = '';
+          _this.u.newUserPassword = '';
+          _this.getUserData();
+        })
+        .catch(function(error) {
+          _this.u.newUserCreateError = error.response.data;
+          _this.$notify({title: 'New user ' + _this.username + ' creation failed.', type: 'error'})
 
-      });
+        });
     },
 
     ccdApply: function() {
@@ -430,16 +418,16 @@ new Vue({
       _this.u.ccdApplyStatusMessage = "";
 
       axios.request(axios_cfg('api/user/ccd/apply', JSON.stringify(_this.u.ccd), 'json'))
-      .then(function(response) {
-        _this.u.ccdApplyStatus = 200;
-        _this.u.ccdApplyStatusMessage = response.data;
-        _this.$notify({title: 'Ccd for user ' + _this.username + ' applied', type: 'success'})
-      })
-      .catch(function(error) {
-        _this.u.ccdApplyStatus = error.response.status;
-        _this.u.ccdApplyStatusMessage = error.response.data;
-        _this.$notify({title: 'Ccd for user ' + _this.username + ' apply failed ', type: 'error'})
-      });
+        .then(function(response) {
+          _this.u.ccdApplyStatus = 200;
+          _this.u.ccdApplyStatusMessage = response.data;
+          _this.$notify({title: 'Ccd for user ' + _this.username + ' applied', type: 'success'})
+        })
+        .catch(function(error) {
+          _this.u.ccdApplyStatus = error.response.status;
+          _this.u.ccdApplyStatusMessage = error.response.data;
+          _this.$notify({title: 'Ccd for user ' + _this.username + ' apply failed ', type: 'error'})
+        });
     },
 
     changeUserPassword: function(user) {
