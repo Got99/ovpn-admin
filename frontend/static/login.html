@@ -2,14 +2,53 @@
 <html>
 <head>
   <title>Login</title>
+  <style>
+    body {
+      background-color: #003366; /* Deep blue background */
+      color: white; /* White text color for better readability */
+      font-family: Arial, sans-serif; /* Modern font */
+      display: flex;
+      justify-content: center; /* Center content horizontally */
+      align-items: center; /* Center content vertically */
+      height: 100vh; /* Full viewport height */
+      margin: 0; /* Remove default margin */
+    }
+    form {
+      background-color: #0055A4; /* Slightly lighter blue background for the form */
+      padding: 80px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+    label, input {
+      display: block;
+      margin-bottom: 10px; /* Space below each label/input pair */
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%; /* Full width of the form */
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #007ACC; /* Vibrant blue button */
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #005999; /* Darken button when hovered */
+    }
+  </style>
 </head>
 <body>
-<h2>Login</h2>
 <form method="POST" action="/login">
   <label for="username">Username:</label>
-  <input type="text" id="username" name="username" required><br><br>
+  <input type="text" id="username" name="username" required>
   <label for="password">Password:</label>
-  <input type="password" id="password" name="password" required><br><br>
+  <input type="password" id="password" name="password" required>
   <button type="submit">Login</button>
 </form>
 </body>
